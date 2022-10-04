@@ -1,4 +1,6 @@
-svenv/*
+.svenv/*
 .DS_Store
 __pycache__/*
 vars.py
+*.pt
+runs/*
