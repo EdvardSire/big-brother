@@ -9,8 +9,6 @@ from slack_sdk.errors import SlackApiError
 def upload(image_URI, detection_pairs):
     client = WebClient(SLACK_BOT_TOKEN)
     logger = logging.getLogger(__name__)
-
-
     channel_id = "general"
 
 
