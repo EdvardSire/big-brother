@@ -1,7 +1,7 @@
 import torch
 from cv2 import VideoCapture, cvtColor, COLOR_BGR2RGB
-from os import system
 from shutil import rmtree
+from upload import upload
 
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
@@ -24,9 +24,25 @@ if not ret:
     exit()
 
 
+# Run the model
+result = model(frame)
 # YOLOv5 evaluates the image and save it to runs/detect/exp/image0.jpg
-model(frame).save()
+result.save()
+
+
+# Where xyxy[i] is the i'th image
+print(result.pandas().xyxy[0])
+# print(result.pandas().xyxy[0]['name'])
+detections = result.pandas().xyxy[0]['name']
+confidence = result.pandas().xyxy[0]['confidence']
+
+
+detection_pairs = []
+for i in range(detections.size):
+    detection_pairs.append((detections.loc[i], confidence.loc[i]))
+
+print(detection_pairs)
 
 # Uploads the image to Slack
-system("python3 upload.py runs/detect/exp/image0.jpg")
+upload("runs/detect/exp/image0.jpg", detection_pairs)
 rmtree("./runs")
