@@ -3,6 +3,8 @@ from cv2 import VideoCapture, cvtColor, COLOR_BGR2RGB
 from shutil import rmtree
 from upload import upload
 
+CONFIDENCE_THRESHOLD = 0.95
+
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 
@@ -40,9 +42,15 @@ confidence = result.pandas().xyxy[0]['confidence']
 detection_pairs = []
 for i in range(detections.size):
     detection_pairs.append((detections.loc[i], confidence.loc[i]))
+# print(detection_pairs)
 
-print(detection_pairs)
+for i in range(detections.size):
+    if detections.loc[i] == "person" and confidence.loc[i] >= CONFIDENCE_THRESHOLD:
+        upload("runs/detect/exp/image0.jpg", detection_pairs)
+        break
+
+
+
 
 # Uploads the image to Slack
-upload("runs/detect/exp/image0.jpg", detection_pairs)
 rmtree("./runs")
