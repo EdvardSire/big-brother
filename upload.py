@@ -2,6 +2,7 @@ from vars import SLACK_BOT_TOKEN, SLACK_APP_TOKEN
 import logging
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+from sys import argv
 
 
 # WebClient instantiates a client that can call API methods
@@ -14,6 +15,7 @@ file_name = "img.jpg"
 # ID of channel that you want to upload file to
 channel_id = "general"
 
+link = argv[1:][0]
 
 try:
     # Call the files.upload method using the WebClient
@@ -21,7 +23,7 @@ try:
     result = client.files_upload(
         channels=channel_id,
         initial_comment="Sample text",
-        file=file_name
+        file=link
     )
     # Log the result
     logger.info(result)
