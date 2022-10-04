@@ -10,6 +10,9 @@ python3 -m venv .svenv
 ```
 
 3. Source the environment
+```
+source .svenv/bin/activate
+```
 
 4. Install the required pip packages
 
