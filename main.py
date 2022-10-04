@@ -16,5 +16,4 @@ def repeat_text(ack, respond, command):
 
 
 if __name__ == "__main__":
-    SocketModeHandler(app, SLACK_APP_TOKEN).start()
-
+    SocketModeHandler(app, SLACK_APP_TOKEN).start() #Hei 
