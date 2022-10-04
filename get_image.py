@@ -1,11 +1,11 @@
 import torch
-import cv2
+from cv2 import VideoCapture, cvtColor, COLOR_BGR2RGB
 import os
 
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 
-stream = cv2.VideoCapture("rtsp://big-brother:8554/ueye")
+stream = VideoCapture("rtsp://big-brother:8554/ueye")
 
 
 if not stream.isOpened():
@@ -13,7 +13,7 @@ if not stream.isOpened():
     exit()
 
 ret, frame = stream.read()
-frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+frame = cvtColor(frame, COLOR_BGR2RGB)
 
 if not ret:
     print("Can't recieve image")
@@ -21,3 +21,4 @@ if not ret:
 
 model(frame).save()
 os.system("python3 upload.py runs/detect/exp/image0.jpg")
+print(1)
