@@ -4,4 +4,4 @@ __pycache__/*
 vars.py
 *.pt
 runs/*
-OUTPUT_IMG.jpg
+UPLOAD_IMG.jpg
