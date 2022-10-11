@@ -50,7 +50,6 @@ for i in range(detections.size):
         break
 
 
-
-
 # Uploads the image to Slack
 rmtree("./runs")
+
