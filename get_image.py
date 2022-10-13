@@ -12,7 +12,15 @@ WIDTH_OFFSET = 640
 ABOVE_BELOW_SPLIT = 515
 NUMBER_OF_SAMPLES_BEFORE_UPLOAD = 10
 SAMPLE_POLLING_TIME = 3
-TOOLS_LIST = ["drill", "hexkey", "levelingtool", "pliers", "scissors", "wrench", "hammer"]
+TOOLS_LIST = [
+    "drill",
+    "hexkey",
+    "levelingtool",
+    "pliers",
+    "scissors",
+    "wrench",
+    "hammer",
+]
 
 
 def draw_boundingboxes(buffer, data):
@@ -43,12 +51,13 @@ def format_right_data(name, percentage, xymin, xymax):
     return (name, percentage, (int(xmin), int(ymin)), (int(xmax), int(ymax)))
 
 
-def detection_over_time(data_over_time):     
+def detection_over_time(data_over_time):
     for tool in data_over_time:
-        if data_over_time[tool] > NUMBER_OF_SAMPLES_BEFORE_UPLOAD//2:
+        if data_over_time[tool] > NUMBER_OF_SAMPLES_BEFORE_UPLOAD // 2:
             return True, tool
 
     return False, None
+
 
 def remove_unwanted_detections(data):
     sanitized_data = []
@@ -119,15 +128,16 @@ def use_image():
             else:
                 above_data.append(value)
         print(unique_detections)
- 
+
         for tool in unique_detections:
-            data_over_time[tool] = data_over_time.get(tool, 0) + 1 
+            data_over_time[tool] = data_over_time.get(tool, 0) + 1
         # print(data)
         # print(data_over_time)
 
         # See the ABOVE_BELOW_SPLIT
-        buffer = cv2.rectangle(buffer, (0, ABOVE_BELOW_SPLIT), (1000, ABOVE_BELOW_SPLIT), (0, 255, 0), 2)
-
+        buffer = cv2.rectangle(
+            buffer, (0, ABOVE_BELOW_SPLIT), (1000, ABOVE_BELOW_SPLIT), (0, 255, 0), 2
+        )
 
         # print("Above data:", above_data)
         # print("Below data:", below_data)
@@ -136,11 +146,10 @@ def use_image():
         for bounding_box_data in range(len(data)):
             buffer = draw_boundingboxes(buffer, data[bounding_box_data])
 
-
         cv2.imwrite("UPLOAD_IMG.jpg", buffer)
 
-        if LOOP_NUMBER == NUMBER_OF_SAMPLES_BEFORE_UPLOAD: 
-            to_upload, detection = detection_over_time(data_over_time) 
+        if LOOP_NUMBER == NUMBER_OF_SAMPLES_BEFORE_UPLOAD:
+            to_upload, detection = detection_over_time(data_over_time)
             if to_upload:
                 data_over_time = dict.fromkeys(TOOLS_LIST, 0)
                 upload("UPLOAD_IMG.jpg", detection, log_state=False)
@@ -160,7 +169,7 @@ def use_image():
 
 if __name__ == "__main__":
     # model = torch.hub.load("ultralytics/yolov5", "yolov5s")
-    model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt')
+    model = torch.hub.load("ultralytics/yolov5", "custom", path="best.pt")
     stream = cv2.VideoCapture("rtsp://big-brother:8554/ueye")
 
     if not stream.isOpened():
@@ -170,4 +179,3 @@ if __name__ == "__main__":
     Thread(target=update_videofeed).start()
     sleep(1)  ## ABSOLUTELY NECESSARY
     Thread(target=use_image).start()
-
