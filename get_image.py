@@ -1,6 +1,7 @@
 import torch
 import cv2
 from upload import upload
+from msg import send_message
 from threading import Thread
 from time import sleep
 
@@ -8,16 +9,10 @@ from time import sleep
 BOUNDING_COLOR = (0, 255, 0)
 HEIGHT_OFFSET = 384
 WIDTH_OFFSET = 640
-ABOVE_BELOW_SPLIT = 620
-
-
-# model = torch.hub.load("ultralytics/yolov5", "yolov5s")
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt')
-stream = cv2.VideoCapture("rtsp://big-brother:8554/ueye")
-
-if not stream.isOpened():
-    print("Cannot reach stream")
-    exit()
+ABOVE_BELOW_SPLIT = 515
+NUMBER_OF_SAMPLES_BEFORE_UPLOAD = 10
+SAMPLE_POLLING_TIME = 3
+TOOLS_LIST = ["drill", "hexkey", "levelingtool", "pliers", "scissors", "wrench", "hammer"]
 
 
 def draw_boundingboxes(buffer, data):
@@ -48,6 +43,22 @@ def format_right_data(name, percentage, xymin, xymax):
     return (name, percentage, (int(xmin), int(ymin)), (int(xmax), int(ymax)))
 
 
+def detection_over_time(data_over_time):     
+    for tool in data_over_time:
+        if data_over_time[tool] > NUMBER_OF_SAMPLES_BEFORE_UPLOAD//2:
+            return True, tool
+
+    return False, None
+
+def remove_unwanted_detections(data):
+    sanitized_data = []
+    for detection in data:
+        if detection[0].lower() in TOOLS_LIST:
+            sanitized_data.append(detection)
+
+    return sanitized_data
+
+
 def update_videofeed():
     print("VIDEOFEED STARTUP")
     global frame
@@ -62,15 +73,21 @@ def update_videofeed():
 def use_image():
     print("MODEL STARTUP")
 
+    data_over_time = dict.fromkeys(TOOLS_LIST, 0)
+    LOOP_NUMBER = 0
+
     while True:
         data = []  # [(name, percent, (xmin, ymin), (xmax, ymax))]
+        below_data = []
+        above_data = []
         buffer = frame
         buffer_left = buffer[HEIGHT_OFFSET:, :WIDTH_OFFSET]
         buffer_right = buffer[HEIGHT_OFFSET:, WIDTH_OFFSET:]
+        unique_detections = set()
 
         result = model([buffer_left, buffer_right])
-        print(result.pandas().xyxy[0])
-        print(result.pandas().xyxy[1])
+        # print(result.pandas().xyxy[0])
+        # print(result.pandas().xyxy[1])
 
         # get data for right image
         for i in range(len(result.pandas().xyxy[0])):
@@ -94,36 +111,63 @@ def use_image():
                     (foo["xmax"][i], foo["ymax"][i]),
                 )
             )
-        print(data)
 
-        # See the ABOVE_BELOW_SPLIT
-        # buffer = cv2.rectangle(buffer, (0, above_below_split), (1000, above_below_split), (0, 255, 0), 2)
-
-        below_data = []
-        above_data = []
         for value in data:
             if (value[2][1] + value[3][1]) // 2 > ABOVE_BELOW_SPLIT:
                 below_data.append(value)
+                unique_detections.add(value[0])
             else:
                 above_data.append(value)
+        print(unique_detections)
+ 
+        for tool in unique_detections:
+            data_over_time[tool] = data_over_time.get(tool, 0) + 1 
+        # print(data)
+        # print(data_over_time)
 
-        print("Above data:", above_data)
-        print("Below data:", below_data)
+        # See the ABOVE_BELOW_SPLIT
+        buffer = cv2.rectangle(buffer, (0, ABOVE_BELOW_SPLIT), (1000, ABOVE_BELOW_SPLIT), (0, 255, 0), 2)
 
+
+        # print("Above data:", above_data)
+        # print("Below data:", below_data)
+
+        # Draw all bounding boxes
         for bounding_box_data in range(len(data)):
             buffer = draw_boundingboxes(buffer, data[bounding_box_data])
 
 
         cv2.imwrite("UPLOAD_IMG.jpg", buffer)
-        upload("UPLOAD_IMG.jpg", data, log_state=False)
+
+        if LOOP_NUMBER == NUMBER_OF_SAMPLES_BEFORE_UPLOAD: 
+            to_upload, detection = detection_over_time(data_over_time) 
+            if to_upload:
+                data_over_time = dict.fromkeys(TOOLS_LIST, 0)
+                upload("UPLOAD_IMG.jpg", detection, log_state=False)
+            else:
+                send_message("No detection")
+            LOOP_NUMBER = 0
+            print("DONE ONE LOOP")
+
+        # upload("UPLOAD_IMG.jpg", data, log_state=False)
         # upload("runs/detect/exp/image1.jpg", data, log_state=False)
 
         print("DONE DELETING")
         print()
-        sleep(8)
+        sleep(SAMPLE_POLLING_TIME)
+        LOOP_NUMBER += 1
 
 
-Thread(target=update_videofeed).start()
-sleep(1)  ## ABSOLUTELY NECESSARY
-Thread(target=use_image).start()
+if __name__ == "__main__":
+    # model = torch.hub.load("ultralytics/yolov5", "yolov5s")
+    model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt')
+    stream = cv2.VideoCapture("rtsp://big-brother:8554/ueye")
+
+    if not stream.isOpened():
+        print("Cannot reach stream")
+        exit()
+
+    Thread(target=update_videofeed).start()
+    sleep(1)  ## ABSOLUTELY NECESSARY
+    Thread(target=use_image).start()
 
