@@ -10,7 +10,8 @@ def custom_message(tool: str) -> str:
                         "@Hauk Bjørneklett",
                         "@Filip Paw",
                         "@Magnus Cederkvist",
-                        "@Erik Gabrielsen"]
+                        "@Erik Gabrielsen",
+                        "@Sindre Nordtveit"]
     
     generic_messages_for_item = ["I have found a {tool}",
                                  "You may have misplaced a {tool}",
