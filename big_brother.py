@@ -116,6 +116,7 @@ if __name__ == "__main__":
     weight_path = "weights/best.pt"
     camera_url = "rtsp://big-brother:8554/ueye"
 
+
     # model = torch.hub.load("ultralytics/yolov5", "yolov5s")
     model = load("ultralytics/yolov5", "custom", path=weight_path)
     stream = cv2.VideoCapture(camera_url)
