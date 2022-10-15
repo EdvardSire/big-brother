@@ -4,6 +4,7 @@ from numpy import ndarray
 import cv2
 from time import sleep
 from threading import Thread
+
 # Local
 from upload import upload
 from msg import send_message
@@ -20,7 +21,9 @@ def draw_boundingboxes(buffer: ndarray, data: tuple, object: str) -> ndarray:
     return buffer
 
 
-def format_left_data(name: str, percentage: float, xymin: tuple, xymax: tuple) -> Tuple[str, float, Tuple[int, int], Tuple[int, int]]:
+def format_left_data(
+    name: str, percentage: float, xymin: tuple, xymax: tuple
+) -> Tuple[str, float, Tuple[int, int], Tuple[int, int]]:
     xmin, ymin = xymin
     xmax, ymax = xymax
     ymin += HEIGHT_OFFSET
@@ -29,7 +32,9 @@ def format_left_data(name: str, percentage: float, xymin: tuple, xymax: tuple) -
     return (name, percentage, (int(xmin), int(ymin)), (int(xmax), int(ymax)))
 
 
-def format_right_data(name: str, percentage: float, xymin: tuple, xymax: tuple) -> Tuple[str, float, Tuple[int, int], Tuple[int, int]]:
+def format_right_data(
+    name: str, percentage: float, xymin: tuple, xymax: tuple
+) -> Tuple[str, float, Tuple[int, int], Tuple[int, int]]:
     xmin, ymin = xymin
     xmax, ymax = xymax
     ymin += HEIGHT_OFFSET
@@ -40,12 +45,12 @@ def format_right_data(name: str, percentage: float, xymin: tuple, xymax: tuple) 
     return (name, percentage, (int(xmin), int(ymin)), (int(xmax), int(ymax)))
 
 
-def detection_over_time(data_over_time: dict) -> bool | str | Tuple:
+def detection_over_time(data_over_time) -> bool | str | Tuple:
     for tool in data_over_time:
         if data_over_time[tool][0] > NUMBER_OF_SAMPLES_BEFORE_UPLOAD // 2:
             return True, tool, (data_over_time[tool][1], data_over_time[tool][2])
 
-    return False, None, None
+    return False, "", tuple
 
 
 def remove_unwanted_detections(data: list) -> list:
@@ -143,14 +148,13 @@ def use_image():
 
         print(data_over_time)
 
-        # See the ABOVE_BELOW_SPLIT
         # buffer = cv2.rectangle(
         #     buffer, (0, ABOVE_BELOW_SPLIT), (1000, ABOVE_BELOW_SPLIT), (0, 255, 0), 2
         # )
 
         if LOOP_NUMBER == NUMBER_OF_SAMPLES_BEFORE_UPLOAD:
             to_upload, object, xyminmax = detection_over_time(data_over_time)
-            if to_upload:
+            if to_upload == True:
                 draw_boundingboxes(buffer, xyminmax, object)
                 cv2.imwrite("UPLOAD_IMG.jpg", buffer)
                 upload("UPLOAD_IMG.jpg", object, "hardware_bad", log_state=False)
