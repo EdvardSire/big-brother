@@ -2,14 +2,14 @@ from vars import SLACK_BOT_TOKEN
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 import logging
-
+from msg_generator import custom_message
 
 def send_message(chat: str, message: str) -> None:
     thing = WebClient(token=SLACK_BOT_TOKEN)
 
     thing.chat_postMessage(
         channel=chat,
-        text=message
+        text=custom_message(message),
         # attachments=[
         #         {
         #             "fallback": "rot",
@@ -28,7 +28,7 @@ def upload(image_URI, message, channel_id, log_state=True):
         # Call the files.upload method using the WebClient
         # Uploading files requires the `files:write` scope
         result = client.files_upload(
-            channels=channel_id, initial_comment=message, file=image_URI
+            channels=channel_id, initial_comment=custom_message(message), file=image_URI
         )
         # Log the result
         if log_state:
