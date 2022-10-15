@@ -6,8 +6,7 @@ from time import sleep
 from threading import Thread
 
 # Local
-from upload import upload
-from msg import send_message
+from slackapi import upload, send_message
 from constants import *
 
 
