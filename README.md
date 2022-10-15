@@ -1,6 +1,10 @@
 # Detecting misplaced tools
 A collection of Python scripts that from a RTSP-stream, using an YOLOv5 model trained on in-house synthetic data, alerts hardware members with Slack notifications if there are misplaced tools on the workbench.
 
+<p>
+<img src="img/demo.png">
+</p>
+
 ## Intalling
 
 1. Clone the repo
