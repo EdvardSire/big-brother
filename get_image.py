@@ -1,26 +1,20 @@
 import torch
+from json import dumps
 import cv2
 from upload import upload
 from msg import send_message
 from threading import Thread, local
 from time import sleep
+from tools import TOOLS_LIST
 
 
 BOUNDING_COLOR = (0, 255, 0)
 HEIGHT_OFFSET = 384
 WIDTH_OFFSET = 640
 ABOVE_BELOW_SPLIT = 515
-NUMBER_OF_SAMPLES_BEFORE_UPLOAD = 10
-SAMPLE_POLLING_TIME = 3
-TOOLS_LIST = [
-    "drill",
-    "hexkey",
-    "levelingtool",
-    "pliers",
-    "scissors",
-    "wrench",
-    "hammer",
-]
+NUMBER_OF_SAMPLES_BEFORE_UPLOAD = 20
+SAMPLE_POLLING_TIME = 2
+DETECTION_ACCURACY = 0.5
 
 
 # def draw_boundingboxes(buffer, data):
@@ -31,10 +25,10 @@ TOOLS_LIST = [
 #     return buffer
 
 
-def draw_boundingboxes(buffer, data):
-    xmax, ymax = data[3]
-    buffer = cv2.rectangle(buffer, data[2], data[3], BOUNDING_COLOR, 2)
-    buffer = cv2.putText(buffer, data[0], (xmax + 10, ymax), 0, 1, BOUNDING_COLOR, 2)
+def draw_boundingboxes(buffer, data, object):
+    xymin, xymax = data
+    buffer = cv2.rectangle(buffer, xymin, xymax, BOUNDING_COLOR, 2)
+    buffer = cv2.putText(buffer, object, (xymax[0] + 10, xymax[1]), 0, 1, BOUNDING_COLOR, 2)
     
     return buffer 
 
@@ -62,15 +56,15 @@ def format_right_data(name, percentage, xymin, xymax):
 def detection_over_time(data_over_time):
     for tool in data_over_time:
         if data_over_time[tool][0] > NUMBER_OF_SAMPLES_BEFORE_UPLOAD // 2:
-            return True, tool
+            return True, tool, (data_over_time[tool][1], data_over_time[tool][2])
 
-    return False, None
+    return False, None, None
 
 
 def remove_unwanted_detections(data):
     sanitized_data = []
     for detection in data:
-        if detection[0].lower() in TOOLS_LIST:
+        if detection[0] in TOOLS_LIST:
             sanitized_data.append(detection)
 
     return sanitized_data
@@ -138,12 +132,7 @@ def use_image():
                 )
             )
         data = remove_unwanted_detections(data)
-        print("DATA", data)
-        # Draw all bounding boxes
-        for bounding_box_data in range(len(data)):
-            print()
-            buffer = draw_boundingboxes(buffer, data[bounding_box_data])
-        cv2.imwrite("UPLOAD_IMG.jpg", buffer)
+        # print("DATA", data)
 
         for value in data:
             if (value[2][1] + value[3][1]) // 2 > ABOVE_BELOW_SPLIT:
@@ -151,36 +140,43 @@ def use_image():
                 unique_detections.add(value[0])
             else:
                 above_data.append(value)
-        print("UNIQUE DETECTIONS", unique_detections)
+        # print("UNIQUE DETECTIONS", unique_detections)
 
         for tool in unique_detections:
-            data_over_time[tool.lower()][0] += 1
-        print("DATAOVERTIME", data_over_time)
+            xymin, xymax = tuple(), tuple()
+            for detection in below_data:
+                if tool == detection[0]:
+                    xymin = detection[2]
+                    xymax = detection[3]
+
+            data_over_time[tool][0] += 1
+            if not len(xymin) == 0:
+                data_over_time[tool][1] = xymin
+                data_over_time[tool][2] = xymax
+
+        print(data_over_time)
 
         # See the ABOVE_BELOW_SPLIT
         # buffer = cv2.rectangle(
         #     buffer, (0, ABOVE_BELOW_SPLIT), (1000, ABOVE_BELOW_SPLIT), (0, 255, 0), 2
         # )
 
-        # print("Above data:", above_data)
-        # print("Below data:", below_data)
-
-
-
         if LOOP_NUMBER == NUMBER_OF_SAMPLES_BEFORE_UPLOAD:
-            to_upload, object = detection_over_time(data_over_time)
+            to_upload, object, xyminmax = detection_over_time(data_over_time)
             if to_upload:
+                draw_boundingboxes(buffer, xyminmax, object)
+                cv2.imwrite("UPLOAD_IMG.jpg", buffer)
                 upload("UPLOAD_IMG.jpg", object, log_state=False)
-                data_over_time = initialize_dict()
             else:
-                send_message("No detection")
+                message = "no detection"
+                send_message("hardware_bad", message)
+            data_over_time = initialize_dict()
             LOOP_NUMBER = 0
             print("DONE ONE LOOP")
 
         # upload("UPLOAD_IMG.jpg", data, log_state=False)
         # upload("runs/detect/exp/image1.jpg", data, log_state=False)
 
-        print("DONE DELETING")
         print()
         sleep(SAMPLE_POLLING_TIME)
         LOOP_NUMBER += 1
