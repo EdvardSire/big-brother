@@ -175,7 +175,7 @@ def use_image():
 
 if __name__ == "__main__":
     # model = torch.hub.load("ultralytics/yolov5", "yolov5s")
-    model = torch.hub.load("ultralytics/yolov5", "custom", path="best.pt")
+    model = torch.hub.load("ultralytics/yolov5", "custom", path="weights/best.pt")
     stream = cv2.VideoCapture("rtsp://big-brother:8554/ueye")
 
     if not stream.isOpened():
