@@ -1,6 +1,4 @@
 .svenv/*
-.DS_Store
+UPLOAD_IMG.jpg
 __pycache__/*
 vars.py
-runs/*
-UPLOAD_IMG.jpg
