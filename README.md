@@ -1,6 +1,8 @@
-# Slackbot
+# Detecting misplaced tools
+A collection of Python scripts that from a RTSP-stream, using an YOLOv5 model trained on in-house synthetic data, alerts hardware members with Slack notifications if there are misplaced tools on the workbench.
 
-## Installing
+## Intalling
+
 1. Clone the repo
 
 2. Create a python virtual environment
@@ -21,3 +23,4 @@ pip3 install -r req.txt
 ```
 
 ## Usage
+After installing the pip modules the
