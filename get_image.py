@@ -1,39 +1,26 @@
+from typing import Tuple
 import torch
-from json import dumps
+from numpy import ndarray
 import cv2
+from time import sleep
+from threading import Thread
+# Local
 from upload import upload
 from msg import send_message
-from threading import Thread, local
-from time import sleep
-from tools import TOOLS_LIST
+from constants import *
 
 
-BOUNDING_COLOR = (0, 255, 0)
-HEIGHT_OFFSET = 384
-WIDTH_OFFSET = 640
-ABOVE_BELOW_SPLIT = 515
-NUMBER_OF_SAMPLES_BEFORE_UPLOAD = 20
-SAMPLE_POLLING_TIME = 2
-DETECTION_ACCURACY = 0.5
-
-
-# def draw_boundingboxes(buffer, data):
-#     xmax, ymax = data[3]
-#     buffer = cv2.rectangle(buffer, data[2], data[3], BOUNDING_COLOR, 2)
-#     buffer = cv2.putText(buffer, data[0], (xmax + 10, ymax), 0, 1, BOUNDING_COLOR, 2)
-
-#     return buffer
-
-
-def draw_boundingboxes(buffer, data, object):
+def draw_boundingboxes(buffer: ndarray, data: tuple, object: str) -> ndarray:
     xymin, xymax = data
     buffer = cv2.rectangle(buffer, xymin, xymax, BOUNDING_COLOR, 2)
-    buffer = cv2.putText(buffer, object, (xymax[0] + 10, xymax[1]), 0, 1, BOUNDING_COLOR, 2)
-    
-    return buffer 
+    buffer = cv2.putText(
+        buffer, object, (xymax[0] + 10, xymax[1]), 0, 1, BOUNDING_COLOR, 2
+    )
+
+    return buffer
 
 
-def format_left_data(name, percentage, xymin, xymax):
+def format_left_data(name: str, percentage: float, xymin: tuple, xymax: tuple) -> Tuple[str, float, Tuple[int, int], Tuple[int, int]]:
     xmin, ymin = xymin
     xmax, ymax = xymax
     ymin += HEIGHT_OFFSET
@@ -42,7 +29,7 @@ def format_left_data(name, percentage, xymin, xymax):
     return (name, percentage, (int(xmin), int(ymin)), (int(xmax), int(ymax)))
 
 
-def format_right_data(name, percentage, xymin, xymax):
+def format_right_data(name: str, percentage: float, xymin: tuple, xymax: tuple) -> Tuple[str, float, Tuple[int, int], Tuple[int, int]]:
     xmin, ymin = xymin
     xmax, ymax = xymax
     ymin += HEIGHT_OFFSET
@@ -53,7 +40,7 @@ def format_right_data(name, percentage, xymin, xymax):
     return (name, percentage, (int(xmin), int(ymin)), (int(xmax), int(ymax)))
 
 
-def detection_over_time(data_over_time):
+def detection_over_time(data_over_time: dict) -> bool | str | Tuple:
     for tool in data_over_time:
         if data_over_time[tool][0] > NUMBER_OF_SAMPLES_BEFORE_UPLOAD // 2:
             return True, tool, (data_over_time[tool][1], data_over_time[tool][2])
@@ -61,7 +48,7 @@ def detection_over_time(data_over_time):
     return False, None, None
 
 
-def remove_unwanted_detections(data):
+def remove_unwanted_detections(data: list) -> list:
     sanitized_data = []
     for detection in data:
         if detection[0] in TOOLS_LIST:
@@ -70,11 +57,11 @@ def remove_unwanted_detections(data):
     return sanitized_data
 
 
-def initialize_dict():
+def initialize_dict() -> dict:
     new_dict = dict()
     for tool in TOOLS_LIST:
         new_dict.update({tool: [0, (0, 0), (0, 0)]})
-    
+
     print("CLEARED OUT DICT")
     return new_dict
 
@@ -97,9 +84,9 @@ def use_image():
     LOOP_NUMBER = 0
 
     while True:
-        data = []  # [(name, percent, (xmin, ymin), (xmax, ymax))]
-        below_data = []
-        above_data = []
+        data = list()  # [(name, percent, (xmin, ymin), (xmax, ymax))]
+        below_data = list()
+        above_data = list()
         buffer = frame
         buffer_left = buffer[HEIGHT_OFFSET:, :WIDTH_OFFSET]
         buffer_right = buffer[HEIGHT_OFFSET:, WIDTH_OFFSET:]
@@ -166,7 +153,7 @@ def use_image():
             if to_upload:
                 draw_boundingboxes(buffer, xyminmax, object)
                 cv2.imwrite("UPLOAD_IMG.jpg", buffer)
-                upload("UPLOAD_IMG.jpg", object, log_state=False)
+                upload("UPLOAD_IMG.jpg", object, "hardware_bad", log_state=False)
             else:
                 message = "no detection"
                 send_message("hardware_bad", message)
