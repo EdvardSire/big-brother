@@ -1,4 +1,4 @@
-.svenv/*
+.bvenv/*
 UPLOAD_IMG.jpg
 __pycache__/*
 vars.py
