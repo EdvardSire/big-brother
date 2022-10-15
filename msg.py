@@ -7,11 +7,11 @@ from slack_sdk import WebClient
 # link = argv[1:][0]
 
 
-def send_message(message):
+def send_message(chat, message):
     thing = WebClient(token=SLACK_BOT_TOKEN)
 
     thing.chat_postMessage(
-        channel="general",
+        channel=chat,
         text=message
         # attachments=[
         #         {
