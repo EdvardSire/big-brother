@@ -2,7 +2,7 @@ import torch
 import cv2
 from upload import upload
 from msg import send_message
-from threading import Thread
+from threading import Thread, local
 from time import sleep
 
 
@@ -23,12 +23,20 @@ TOOLS_LIST = [
 ]
 
 
+# def draw_boundingboxes(buffer, data):
+#     xmax, ymax = data[3]
+#     buffer = cv2.rectangle(buffer, data[2], data[3], BOUNDING_COLOR, 2)
+#     buffer = cv2.putText(buffer, data[0], (xmax + 10, ymax), 0, 1, BOUNDING_COLOR, 2)
+
+#     return buffer
+
+
 def draw_boundingboxes(buffer, data):
     xmax, ymax = data[3]
     buffer = cv2.rectangle(buffer, data[2], data[3], BOUNDING_COLOR, 2)
     buffer = cv2.putText(buffer, data[0], (xmax + 10, ymax), 0, 1, BOUNDING_COLOR, 2)
-
-    return buffer
+    
+    return buffer 
 
 
 def format_left_data(name, percentage, xymin, xymax):
@@ -53,7 +61,7 @@ def format_right_data(name, percentage, xymin, xymax):
 
 def detection_over_time(data_over_time):
     for tool in data_over_time:
-        if data_over_time[tool] > NUMBER_OF_SAMPLES_BEFORE_UPLOAD // 2:
+        if data_over_time[tool][0] > NUMBER_OF_SAMPLES_BEFORE_UPLOAD // 2:
             return True, tool
 
     return False, None
@@ -66,6 +74,15 @@ def remove_unwanted_detections(data):
             sanitized_data.append(detection)
 
     return sanitized_data
+
+
+def initialize_dict():
+    new_dict = dict()
+    for tool in TOOLS_LIST:
+        new_dict.update({tool: [0, (0, 0), (0, 0)]})
+    
+    print("CLEARED OUT DICT")
+    return new_dict
 
 
 def update_videofeed():
@@ -82,7 +99,7 @@ def update_videofeed():
 def use_image():
     print("MODEL STARTUP")
 
-    data_over_time = dict.fromkeys(TOOLS_LIST, 0)
+    data_over_time = initialize_dict()
     LOOP_NUMBER = 0
 
     while True:
@@ -95,8 +112,8 @@ def use_image():
         unique_detections = set()
 
         result = model([buffer_left, buffer_right])
-        # print(result.pandas().xyxy[0])
-        # print(result.pandas().xyxy[1])
+        print(result.pandas().xyxy[0])
+        print(result.pandas().xyxy[1])
 
         # get data for right image
         for i in range(len(result.pandas().xyxy[0])):
@@ -120,6 +137,13 @@ def use_image():
                     (foo["xmax"][i], foo["ymax"][i]),
                 )
             )
+        data = remove_unwanted_detections(data)
+        print("DATA", data)
+        # Draw all bounding boxes
+        for bounding_box_data in range(len(data)):
+            print()
+            buffer = draw_boundingboxes(buffer, data[bounding_box_data])
+        cv2.imwrite("UPLOAD_IMG.jpg", buffer)
 
         for value in data:
             if (value[2][1] + value[3][1]) // 2 > ABOVE_BELOW_SPLIT:
@@ -127,32 +151,27 @@ def use_image():
                 unique_detections.add(value[0])
             else:
                 above_data.append(value)
-        print(unique_detections)
+        print("UNIQUE DETECTIONS", unique_detections)
 
         for tool in unique_detections:
-            data_over_time[tool] = data_over_time.get(tool, 0) + 1
-        # print(data)
-        # print(data_over_time)
+            data_over_time[tool.lower()][0] += 1
+        print("DATAOVERTIME", data_over_time)
 
         # See the ABOVE_BELOW_SPLIT
-        buffer = cv2.rectangle(
-            buffer, (0, ABOVE_BELOW_SPLIT), (1000, ABOVE_BELOW_SPLIT), (0, 255, 0), 2
-        )
+        # buffer = cv2.rectangle(
+        #     buffer, (0, ABOVE_BELOW_SPLIT), (1000, ABOVE_BELOW_SPLIT), (0, 255, 0), 2
+        # )
 
         # print("Above data:", above_data)
         # print("Below data:", below_data)
 
-        # Draw all bounding boxes
-        for bounding_box_data in range(len(data)):
-            buffer = draw_boundingboxes(buffer, data[bounding_box_data])
 
-        cv2.imwrite("UPLOAD_IMG.jpg", buffer)
 
         if LOOP_NUMBER == NUMBER_OF_SAMPLES_BEFORE_UPLOAD:
-            to_upload, detection = detection_over_time(data_over_time)
+            to_upload, object = detection_over_time(data_over_time)
             if to_upload:
-                data_over_time = dict.fromkeys(TOOLS_LIST, 0)
-                upload("UPLOAD_IMG.jpg", detection, log_state=False)
+                upload("UPLOAD_IMG.jpg", object, log_state=False)
+                data_over_time = initialize_dict()
             else:
                 send_message("No detection")
             LOOP_NUMBER = 0
