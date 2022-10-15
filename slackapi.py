@@ -1,8 +1,11 @@
-from vars import SLACK_BOT_TOKEN
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 import logging
+
+# Local
+from vars import SLACK_BOT_TOKEN
 from msg_generator import custom_message
+
 
 def send_message(chat: str, message: str) -> None:
     thing = WebClient(token=SLACK_BOT_TOKEN)
