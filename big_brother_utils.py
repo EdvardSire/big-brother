@@ -1,6 +1,5 @@
 import cv2
 from numpy import ndarray
-from typing import Tuple
 
 # Local
 from constants import *
@@ -18,7 +17,7 @@ def draw_boundingboxes(buffer: ndarray, data: tuple, object: str) -> ndarray:
 
 def format_left_data(
     name: str, percentage: float, xymin: tuple, xymax: tuple
-) -> Tuple[str, float, Tuple[int, int], Tuple[int, int]]:
+) -> tuple[str, float, tuple[int, int], tuple[int, int]]:
     xmin, ymin = xymin
     xmax, ymax = xymax
     ymin += HEIGHT_OFFSET
@@ -29,7 +28,7 @@ def format_left_data(
 
 def format_right_data(
     name: str, percentage: float, xymin: tuple, xymax: tuple
-) -> Tuple[str, float, Tuple[int, int], Tuple[int, int]]:
+) -> tuple[str, float, tuple[int, int], tuple[int, int]]:
     xmin, ymin = xymin
     xmax, ymax = xymax
     ymin += HEIGHT_OFFSET
