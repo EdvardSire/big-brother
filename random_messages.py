@@ -24,14 +24,14 @@ def custom_message(tool: str) -> str:
         "Social credit deducted :social_credit:",
         "Excecution date: 马公鸡",
         "Castration imminent",
-        "You are a disgrace to your family",
+        "You are a disgrace to your family"
     ]
 
     # 15 percent chance of getting a hate message
     rand = randint(0, 100)
     if rand < 15:
         return f"{tool} detected. {choice(hate_messages)} {choice(hardware_members)}"
-        # return choice(hardware_members) + f". {tool} detected, " + choice(hate_messages)
+    # return choice(hardware_members) + f". {tool} detected, " + choice(hate_messages)
     else:
         return choice(generic_messages_for_item).format(tool=tool)
 
