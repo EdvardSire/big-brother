@@ -96,9 +96,7 @@ def use_image():
                 draw_boundingboxes(buffer, xyminmax, object)
                 cv2.imwrite("UPLOAD_IMG.jpg", buffer)
                 upload("UPLOAD_IMG.jpg", object, "hardware_bad", log_state=False)
-            else:
-                message = "no detection"
-                send_message("hardware_bad", message)
+
             data_over_time = initialize_dict()
             LOOP_NUMBER = 0
             print("DONE ONE LOOP")
@@ -112,12 +110,9 @@ def use_image():
 
 
 if __name__ == "__main__":
-
     weight_path = "weights/best.pt"
     camera_url = "rtsp://big-brother:8554/ueye"
 
-
-    # model = torch.hub.load("ultralytics/yolov5", "yolov5s")
     model = load("ultralytics/yolov5", "custom", path=weight_path)
     stream = cv2.VideoCapture(camera_url)
 
