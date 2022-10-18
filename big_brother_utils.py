@@ -40,12 +40,12 @@ def format_right_data(
     return (name, percentage, (int(xmin), int(ymin)), (int(xmax), int(ymax)))
 
 
-def detection_over_time(data_over_time) -> bool | str | Tuple:
+def detection_over_time(data_over_time) -> tuple[bool, str, tuple]:
     for tool in data_over_time:
         if data_over_time[tool][0] > NUMBER_OF_SAMPLES_BEFORE_UPLOAD // 2:
             return True, tool, (data_over_time[tool][1], data_over_time[tool][2])
 
-    return False, "", tuple
+    return False, str(), tuple()
 
 
 def remove_unwanted_detections(data: list) -> list:
