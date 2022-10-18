@@ -11,6 +11,9 @@ def custom_message(tool: str) -> str:
         "<@Magnus Cederkvist>",
         "<@Erik Gabrielsen>",
         "<@Sindre Nordtveit>",
+        "<@Sindre Nordtveit>",
+        "<@Sindre Nordtveit>",
+        "<@Sindre Nordtveit>"
     ]
 
     generic_messages_for_item = [
