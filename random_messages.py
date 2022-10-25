@@ -3,17 +3,17 @@ from random import randint, choice
 
 def custom_message(tool: str) -> str:
     hardware_members = [
-        "<@Jørgen Knoph>",
-        "<@Petter Nilsen>",
-        "<@Anette Hatlen>",
-        "<@Hauk Bjørneklett>",
-        "<@Filip Paw>",
-        "<@Magnus Cederkvist>",
-        "<@Erik Gabrielsen>",
-        "<@Sindre Nordtveit>",
-        "<@Sindre Nordtveit>",
-        "<@Sindre Nordtveit>",
-        "<@Sindre Nordtveit>"
+        "<@U02F0935X28>", #Jørgen Knoph
+        "<@U0420RA7LJD>", #Petter Nilsen
+        "<@U01VBNEKUQL>", #Anette Hatlen
+        "<@U041Z19NEJ1>", #Hauk Bjørneklett
+        "<@U041FABKU78>", #Filip Paw
+        "<@U04226E229Z>", #Magnus Cederkvist
+        "<@U042064S27M>", #Erik Gabrielsen
+        "<@U01B5F4CM0Q>", #Sindre Nordtveit
+        "<@U01B5F4CM0Q>", #Sindre Nordtveit
+        "<@U01B5F4CM0Q>", #Sindre Nordtveit
+        "<@U01B5F4CM0Q>" #Sindre Nordtveit
     ]
 
     generic_messages_for_item = [
